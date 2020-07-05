@@ -8,8 +8,7 @@ board = [["X", "_", "X", "B", "X", "_", "X", "_"],
          ["W", "X", "W", "X", "W", "X", "W", "X"]]
 current_player = "B"
 adversary="W"
-go_from=""
-go_to=""
+
 def display_board():
     print("  A", "B", "C", "D", "E", "F", "G", "H")
     print(1, *board[0])
@@ -22,57 +21,70 @@ def display_board():
     print(8, *board[7])
 display_board()
 column_dictionary = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6, "H": 7}
+
+
 def go_from(current_player):
+    row = -1
+    column = -1
+
     valid = False
     while not valid:
         try:
-            from_column, from_row = str( input("W starts. Choose a pawn, print letter A-H, number 1-8:")).split(",")
+            to_column, to_row = str(input("choose where to go, print letter A-H, number 1-8:")).split(",")
         except ValueError:
             print("error! print a letter and a number separated by a comma")
             continue
 
-        if from_row in ["1", "2", "3", "4", "5", "6", "7", "8"]:
-            from_row=int(from_row)
-            if from_column in column_dictionary:
-                from_column_index = column_dictionary[from_column]
-                if board[from_row - 1][from_column_index]== current_player:
-                    #board[from_row - 1][from_column_index] = "_"
-                    valid = True
-
-                else:
-                    print ("Sorry, you can't go there")
+        if check_move_input(to_column, to_row):
+            row, column = parse_move(to_row, to_column)
+            # check pawn color
+            if board[row][column] == current_player:
+                valid = True
             else:
-                print ("Incorrect input(letter). Choose letter A-H and number 1-8.")
-        else:
-            print("Incorrect input(number). Choose letter A-H and number 1-8")
-    return from_row-1, from_column_index
+                print ("Sorry, you can't go there")
+
+    return row, column
 
 
+def go_to(possible_moves):
+    row = -1
+    column = -1
 
-def go_to():
     valid = False
     while not valid:
         try:
-            to_column, to_row = str( input("choose where to go, print letter A-H, number 1-8:")).split(",")
+            to_column, to_row = str(input("choose where to go, print letter A-H, number 1-8:")).split(",")
         except ValueError:
             print("error! print a letter and a number separated by a comma")
             continue
 
-        if to_row in ["1", "2", "3", "4", "5", "6", "7", "8"]:
-            to_row=int(to_row)
-            if to_column in column_dictionary:
-                to_column_index = column_dictionary[to_column]
-                if board[to_row - 1][to_column_index]=="_":
-                    #board[to_row - 1][to_column_index] = current_player
-                    valid = True
-                else:
-                    print("not possible to go there")
+        if check_move_input(to_column, to_row):
+            row, column = parse_move(to_row, to_column)
+            # check if pawn can go there
+            if (row, column) in possible_moves:
+                valid = True
             else:
-                print("the letter is wrong")
-        else:
-            print("the number is wong")
-    return to_row-1, to_column_index
+                print ("Sorry, you can't go there")
 
+    return row, column
+
+# check if input data is valid
+def check_move_input(column, row):
+    valid = False
+    if row in ["1", "2", "3", "4", "5", "6", "7", "8"]:
+        if column in column_dictionary:
+            valid = True
+        else:
+            print("the letter is wrong")
+    else:
+        print("the number is wong")
+    return valid
+
+
+def parse_move(raw_column, raw_row):
+    row = int(raw_row) - 1
+    column = column_dictionary[raw_column]
+    return row, column
 
 
 #def handle_turn():
@@ -117,30 +129,28 @@ def go_to():
 
     #display_board()
 
+def check_boarders(row, column):
+    return 0 <= row <= 7 and 0 <= column <= 7
 
 
 def possible_moves(row_from, column_from):
     possible_moves = []
 
-    if board[row_from][column_from] == "W":
-        if row_from>=1 and column_from<=6:
-            a_tuple = row_from - 1, column_from + 1
-            if board[row_from - 1][column_from + 1] == "_":
-                possible_moves.append(a_tuple)
-        if row_from>=1 and column_from>=1:
-            a_tuple2 = row_from - 1, column_from - 1
-            if board[row_from - 1][column_from - 1] == "_":
-                possible_moves.append(a_tuple2)
+    move_direction = -1
+    if board[row_from][column_from] == "B":
+        move_direction = 1
 
-    elif board[row_from][column_from] == "B":
-        if column_from <= 6 and row_from<=6:
-            a_tuple = row_from + 1, column_from + 1
-            if board[row_from + 1][column_from + 1] == "_":
-                possible_moves.append(a_tuple)
-        if column_from>=1 and row_from<=6:
-            a_tuple2 = row_from + 1, column_from - 1
-            if board[row_from + 1][column_from - 1] == "_":
-                possible_moves.append(a_tuple2)
+    r_tuple = int(row_from + move_direction), int(column_from + 1)
+    l_tuple = int(row_from + move_direction), int(column_from - 1)
+
+    if check_boarders(r_tuple[0], r_tuple[1]):
+        if board[r_tuple[0]][r_tuple[1]] == "_":
+            possible_moves.append(r_tuple)
+
+    if check_boarders(l_tuple[0], l_tuple[1]):
+        if board[l_tuple[0]][l_tuple[1]] == "_":
+            possible_moves.append(l_tuple)
+
     return possible_moves
 #print(possible_moves(2,3))
 
@@ -203,14 +213,16 @@ def possible_beat(from_row, from_column):
 def handle_turn():
     from_coord=go_from(current_player)
     row_from, column_from=from_coord
-    to_coord=go_to()
-    row_to, column_to=to_coord
+
     possible_goes=possible_moves(row_from, column_from)
-    possible_beats=possible_beat(row_from, column_from)
+    # possible_beats=possible_beat(row_from, column_from)
+    to_coord=go_to(possible_goes)
+    row_to, column_to=to_coord
+
     valid = False
     while not valid:
         if to_coord in possible_goes or to_coord in possible_beats:
-            if row_from-row_to==abs(1):
+            if to_coord in possible_goes:
                 board[row_from][column_from] = "_"
                 board[row_to][column_to] = current_player
                 valid = True
@@ -240,5 +252,12 @@ def handle_turn():
     display_board()
 handle_turn()
 
+def game():
+    while not win():
+        while not check_ok:
+            move = input_move()
+            check_ok = check_move()
+        do_move(move)
+        switch_player()
 
 
