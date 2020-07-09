@@ -66,25 +66,10 @@ def possible_moves(row_from, column_from, board):
             possible_moves_list.append(l_tuple)
     return possible_moves_list
 
-def possible_queen_moves(row_from, column_from, board):
-
-    possible_queen_moves_list=[]
-    for i in range(1,8):
-        while board[row_from+i][column_from+i]=="_":
-            down_right=row_from+i, column_from+i
-            possible_queen_moves_list.append(down_right)
-        while board[row_from + i][column_from - i] == "_":
-            down_left = row_from + i, column_from - i
-            possible_queen_moves_list.append(down_left)
-        while board[row_from-i][column_from+i]=="_":
-            up_right=row_from-i, column_from+i
-            possible_queen_moves_list.append(up_right)
-        while board[row_from-i][column_from-i]=="_":
-            up_left=row_from-i, column_from-i
-            possible_queen_moves_list.append(up_left)
 
 
-    return possible_queen_moves_list
+
+
 
 def get_beat_move(row_from, col_from, row_direc, col_direc, player, board):
     adversary = ""
@@ -227,29 +212,6 @@ def fuk_move(cur_pawn_row, cur_pawn_column, pawns_beaten, board):
     board[cur_pawn_row][cur_pawn_column] = "_"
     display_board(board)
 
-
-
-def become_w_queen(board):
-
-    for i in range(len(board[2])):
-        if board[2][i]=="w":
-            board[2][i]="W"
-            display_board(board)
-
-def become_b_queen(board):
-    for i in range(len(board[9])):
-        if board[9][i]=="b":
-            board[9][i]="B"
-            display_board(board)
-
-
-
-
-
-
-
-
-
 def check_winner(beaten):
 
     if beaten["w"]==12:
@@ -258,29 +220,21 @@ def check_winner(beaten):
         return "w"
     return ""
 
-
 def game_over( beaten_pawns):
-
-
     winner=check_winner(beaten_pawns)
     if winner!="" or tie(winner, beaten_pawns):
             return True
 
-
 def tie(the_winner, beaten):
-
     if the_winner=="" and beaten["b"]==11 and beaten["w"]==11:
         return True
 
 def switch_player(player):
-
     if player=="w":
         player="b"
     elif player=="b":
         player="w"
     return player
-
-
 
 def game():
     board=init_board()
@@ -325,6 +279,61 @@ def game():
             print(winner+" Wins!")
         else:
             print("Tie")
+
+
+def become_w_queen(board):
+
+    for i in range(len(board[2])):
+        if board[2][i]=="w":
+            board[2][i]="W"
+            display_board(board)
+
+def become_b_queen(board):
+    for i in range(len(board[9])):
+        if board[9][i]=="b":
+            board[9][i]="B"
+            display_board(board)
+
+def get_queen_move(row_from, col_from, row_direc, col_direc, i, board):
+    queen_move_tuple=row_from+i*row_direc, col_from+i*col_direc
+    try:
+        if board[row_from + i*row_direc][col_from + i*col_direc] == "_":
+            return queen_move_tuple
+    except IndexError:
+        pass
+
+def possible_queen_moves(row_from, column_from, board):
+    possible_queen_moves_list=[]
+    for i in range(1,8):
+        left_up = get_queen_move(row_from, column_from, -1, -1, i)
+        if left_up!=None:
+            if board[left_up[0]][left_up[1]]=="_":
+                possible_queen_moves_list.append(left_up)
+
+
+    for i in range(1, 8):
+        right_up = get_queen_move(row_from, column_from, -1, 1, i)
+        if right_up!=None:
+            if board[right_up[0]][right_up[1]]=="_":
+                possible_queen_moves_list.append(right_up)
+            else:
+                break
+    for i in range(1, 8):
+        left_down = get_queen_move(row_from, column_from, 1, -1, i)
+        if left_down!=None:
+            if board[left_down[0]][left_down[1]]=="_":
+                possible_queen_moves_list.append(left_down)
+            else:
+                break
+    for i in range(1, 8):
+        right_down = get_queen_move(row_from, column_from, 1, 1, i)
+        if right_down!=None:
+            if board[right_down[0]][right_down[1]]=="_":
+                possible_queen_moves_list.append(right_down)
+            else:
+                break
+
+    return possible_queen_moves_list
 
 
 
